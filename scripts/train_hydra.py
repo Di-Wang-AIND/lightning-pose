@@ -6,6 +6,7 @@ import os
 import pytorch_lightning as pl
 import torch
 import numpy as np
+import warnings
 
 from lightning_pose.callbacks.callbacks import AnnealWeight
 from lightning_pose.data.utils import (
@@ -36,6 +37,13 @@ def train(cfg: DictConfig):
 
     print("Our Hydra config file:")
     pretty_print(cfg)
+    
+    # for ensembling exps, we use additional argument cfg.training.rng_seed_all_data_serving
+    # if it is not None, we use it to set both dali.general.seed and training.rng_seed_data_order_pt
+    if cfg.training.rng_seed_all_data_serving is not None:
+        warnings.warn("using cfg.training.rng_seed_all_data_serving to override dali.general.seed and training.rng_seed_data_order_pt")
+        cfg.dali.general.seed = cfg.training.rng_seed_all_data_serving
+        cfg.training.rng_seed_data_order_pt = cfg.training.rng_seed_all_data_serving
 
     # path handling for toy data
     data_dir, video_dir = return_absolute_data_paths(data_cfg=cfg.data)
