@@ -74,6 +74,10 @@ training:
   rng_seed_data_pt: 42
   # rng seed for weight initialization
   rng_seed_model_pt: 44
+  # rng seed for torch data order
+  rng_seed_data_order_pt: 46
+  # for ensembling, rng seed that (!!) overrides (!!) both rng_seed_data_order_pt and dali.general.seed
+  rng_seed_all_data_serving: null
   # how many batches to take before terminating an epoch (any dataloader that has less than limit_train_batches will be cycled over)
   limit_train_batches: null
   profiler: null

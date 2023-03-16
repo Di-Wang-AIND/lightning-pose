@@ -36,6 +36,7 @@ class BaseDataModule(pl.LightningDataModule):
         test_probability: Optional[float] = None,
         train_frames: Optional[Union[float, int]] = None,
         torch_seed: int = 42,
+        torch_data_order_seed: int = 42,
     ) -> None:
         """Data module splits a dataset into train, val, and test data loaders.
 
@@ -70,6 +71,7 @@ class BaseDataModule(pl.LightningDataModule):
         self.val_dataset = None  # populated by self.setup()
         self.test_dataset = None  # populated by self.setup()
         self.torch_seed = torch_seed
+        self.torch_data_order_seed = torch_data_order_seed
 
     def setup(self, stage: Optional[str] = None):  # stage arg needed for ptl
 
@@ -114,6 +116,7 @@ class BaseDataModule(pl.LightningDataModule):
             batch_size=self.train_batch_size,
             num_workers=self.num_workers,
             persistent_workers=True,
+            generator=torch.Generator().manual_seed(self.torch_data_order_seed),
         )
 
     def val_dataloader(self) -> torch.utils.data.DataLoader:
@@ -157,6 +160,7 @@ class UnlabeledDataModule(BaseDataModule):
         test_probability: Optional[float] = None,
         train_frames: Optional[float] = None,
         torch_seed: int = 42,
+        torch_data_order_seed: int = 42,
         imgaug: Literal["default", "dlc", "dlc-light"] = "default",
     ) -> None:
         """Data module that contains labeled and unlabeled data loaders.
@@ -176,7 +180,6 @@ class UnlabeledDataModule(BaseDataModule):
                 `train_probability`); if float, must be between 0 and 1
                 (exclusive) and defines the fraction of the initially selected
                 train frames
-            torch_seed: control data splits
             torch_seed: control randomness of labeled data loading
             imgaug: type of image augmentation to apply to unlabeled frames
 
@@ -192,11 +195,13 @@ class UnlabeledDataModule(BaseDataModule):
             test_probability=test_probability,
             train_frames=train_frames,
             torch_seed=torch_seed,
+            torch_data_order_seed=torch_data_order_seed,
         )
         self.video_paths_list = video_paths_list
         self.filenames = check_video_paths(self.video_paths_list)
-        self.num_workers_for_unlabeled = num_workers // 2
-        self.num_workers_for_labeled = num_workers // 2
+        self.num_workers_for_unlabeled = 0 # num_workers // 2
+        self.num_workers_for_labeled = num_workers # num_workers // 2
+        self.torch_data_order_seed = torch_data_order_seed
         self.dali_config = dali_config
         self.unlabeled_dataloader = None  # initialized in setup_unlabeled
         self.imgaug = imgaug
@@ -223,6 +228,7 @@ class UnlabeledDataModule(BaseDataModule):
                 batch_size=self.train_batch_size,
                 num_workers=self.num_workers_for_labeled,
                 persistent_workers=True,
+                generator=torch.Generator().manual_seed(self.torch_data_order_seed),
             ),
             unlabeled=self.unlabeled_dataloader,
         )
