@@ -17,7 +17,7 @@ is a requirement for **NVIDIA DALI**.
 
 ## Installation
 
-First create a Conda environment in which this package and its dependencies will be installed. 
+First create a Conda environment in which this package and its dependencies will be installed.
 As you would do for any other repository --
 
 Create a conda environment:
