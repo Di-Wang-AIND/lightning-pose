@@ -23,7 +23,7 @@ from lightning_pose.utils.scripts import (
     calculate_train_batches,
     compute_metrics,
 )
-
+from moviepy.editor import VideoFileClip
 
 @hydra.main(config_path="configs", config_name="config_toy-dataset")
 def train(cfg: DictConfig):
@@ -153,6 +153,12 @@ def train(cfg: DictConfig):
         for video_file in filenames:
             assert os.path.isfile(video_file)
             pretty_print_str(f"Predicting video: {video_file}...")
+
+            # update the image original dimension for the current testing video to avoid the shift of xy coordinates.
+            clip = VideoFileClip(video_file)
+            cfg.data.image_orig_dims.width  = clip.w
+            cfg.data.image_orig_dims.height = clip.h
+
             # get save name for prediction csv file
             video_pred_dir = os.path.join(hydra_output_directory, "video_preds")
             video_pred_name = os.path.splitext(os.path.basename(video_file))[0]
